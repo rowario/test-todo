@@ -1,0 +1,30 @@
+@use "sass:color";
+
+$button-background: #0b7285;
+$button-color: white;
+
+.button {
+	display: inline-block;
+	text-decoration: none;
+	background-color: $button-background;
+	color: $button-color;
+	font-size: 16px;
+	font-weight: 500;
+	padding: 8px;
+	border-radius: 6px;
+	border: none;
+	cursor: pointer;
+
+	&:hover {
+		background-color: color.adjust($button-background, $lightness: -3%);
+	}
+
+	&:active {
+		color: color.adjust($button-color, $lightness: -2%);
+		transform: translateY(1px);
+	}
+
+	&.full-width {
+		width: 100%;
+	}
+}

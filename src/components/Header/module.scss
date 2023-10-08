@@ -1,0 +1,29 @@
+.header_wrapper {
+	background: #fff;
+	border-bottom: 1px solid #e9ecef;
+	margin-bottom: 10px;
+}
+
+.header {
+	height: 50px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	& > div {
+		width: 33.3333333333333%;
+		text-align: center;
+		&:first-child {
+			text-align: left;
+		}
+		&:last-child {
+			text-align: right;
+		}
+	}
+
+	& > p {
+		font-size: 18px;
+		font-weight: 500;
+	}
+}
+

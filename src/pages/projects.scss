@@ -1,0 +1,20 @@
+.projects-list {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+
+	& > .project-item {
+		text-decoration: none;
+		color: #000;
+	}
+
+	& > .project-item:hover .paper {
+		user-select: none;
+		cursor: pointer;
+		border: 1px solid #ced4da;
+
+		&:active {
+			transform: translateY(1px);
+		}
+	}
+}

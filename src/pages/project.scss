@@ -1,0 +1,29 @@
+.tasks-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+
+	& .tasks-column {
+		display: flex;
+		flex-direction: column;
+
+		& > .paper {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+	}
+
+	& .tasks {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: -10px;
+
+	}
+}
+
+.project-container {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}

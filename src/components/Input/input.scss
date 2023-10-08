@@ -1,0 +1,19 @@
+input {
+	box-sizing: border-box;
+	border-radius: 5px;
+	border: 1px solid #dee2e6;
+	height: 35px;
+	padding: 0px 8px;
+
+	&:placeholder-shown {
+		color: #adb5bd;
+	}
+
+	&.small {
+		height: 30px;
+	}
+
+	&.full-width {
+		width: 100%;
+	}
+}
