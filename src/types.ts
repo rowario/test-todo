@@ -1,16 +1,3 @@
-export type Task = {
-	id: number;
-	title: string;
-	description: string;
-	priority: "High" | "Medium" | "Low";
-	attachedFiles: string[];
-	subTasks: SubTask[];
-	comments: Comment[];
-	createdAt: Date;
-	startedAt: Date;
-	endedAt: Date;
-};
-
 export type SubTask = {
 	id: number;
 	title: string;
@@ -19,19 +6,41 @@ export type SubTask = {
 };
 
 export type Comment = {
+	id: number;
 	author: string;
 	text: string;
-	subcomments?: Comment[];
+	subcomments: Comment[];
 	createdAt: Date;
+};
+
+export type Priority = "High" | "Medium" | "Low";
+
+export type Task = {
+	id: number;
+	board: TaskBoard;
+	title: string;
+	description: string;
+	priority: Priority;
+	attachedFiles: string[];
+	lastSubtaskId: number;
+	subTasks: SubTask[];
+	lastCommentId: number;
+	comments: Comment[];
+	createdAt: Date;
+	startedAt: Date | null;
+	endedAt: Date | null;
 };
 
 export type Project = {
 	id: number;
 	name: string;
 	createdAt: Date;
+	lastTaskId: number;
 	tasks: {
 		queue: Task[];
 		development: Task[];
 		done: Task[];
 	};
 };
+
+export type TaskBoard = keyof Project["tasks"];

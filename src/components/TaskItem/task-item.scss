@@ -12,6 +12,15 @@
 	font-weight: 500;
 	margin-bottom: 10px;
 
+	& > .title {
+		display: flex;
+		gap: 11;
+
+		& > .id {
+			color: red;
+		}
+	}
+
 	& > .sub-tasks > .sub-task {
 		height: 26px;
 		display: flex;

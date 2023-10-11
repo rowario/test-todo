@@ -14,7 +14,6 @@ export const Modal: FC<{ children: ReactNode; opened: boolean; onClose: () => an
 	);
 };
 
-
-				// <div onClick={() => onClose()} className="close-button">
-				// 	×
-				// </div>
+// <div onClick={() => onClose()} className="close-button">
+// 	×
+// </div>

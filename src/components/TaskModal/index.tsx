@@ -1,7 +1,21 @@
 import { Editor } from "@tinymce/tinymce-react";
 import dayjs from "dayjs";
 import { FC, useEffect, useState } from "react";
+import useDebounce from "../../hooks/useDebounce";
+import {
+	addTaskComment,
+	addTaskSubcomment,
+	addTaskSubtask,
+	deleteTask,
+	deleteTaskSubtask,
+	toggleTaskSubtask,
+	updateTaskDescription,
+	updateTaskPriority,
+	updateTaskTitle,
+} from "../../redux/actions";
+import { useAppDispatch } from "../../redux/hooks";
 import { Comment, Task } from "../../types";
+import Button from "../Button";
 import Input from "../Input";
 import Loader from "../Loader";
 import { Modal } from "../Modal";
@@ -9,22 +23,45 @@ import Timer from "../Timer";
 import "./task-modal.scss";
 
 type Priority = Task["priority"];
-const possiblePriorities: Priority[] = ["Low", "Medium", "High"];
+const priorities: Priority[] = ["Low", "Medium", "High"];
 
-const TaskModal: FC<{ task: Task | null; opened: boolean; onClose: () => any }> = ({ task, opened, onClose }) => {
+const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onClose: () => any }> = ({
+	projectId,
+	task,
+	opened,
+	onClose,
+}) => {
 	const [title, setTitle] = useState(task?.title ?? "");
+	const debouncedTitle = useDebounce(title, 300);
+
 	const [description, setDescription] = useState("");
-	const [priority, setPriority] = useState<Task["priority"]>("Low");
+	const debouncedDescription = useDebounce(description, 300);
+
+	const [subtaskInput, setSubtaskInput] = useState("");
+
+	const [isOpenCommentInput, setIsOpenCommentInput] = useState(false);
+	const [commentInput, setCommentInput] = useState("");
 
 	const [editorLoaded, setEditorLoaded] = useState(false);
 
-	const [subtaskInput, setSubtaskInput] = useState("");
+	const dispatch = useAppDispatch();
 
 	useEffect(() => {
 		setTitle(task?.title ?? "");
 		setDescription(task?.description ?? "");
-		setPriority(task?.priority ?? "Low");
 	}, [task, task?.description]);
+
+	useEffect(() => {
+		if (task && task.title !== debouncedTitle) {
+			dispatch(updateTaskTitle({ projectId, board: task.board, taskId: task.id, title: debouncedTitle }));
+		}
+	}, [debouncedTitle]);
+
+	useEffect(() => {
+		if (task && task.description !== debouncedDescription) {
+			dispatch(updateTaskDescription({ projectId, board: task.board, taskId: task.id, description: debouncedDescription }));
+		}
+	}, [debouncedDescription]);
 
 	if (!task) return null;
 
@@ -54,21 +91,41 @@ const TaskModal: FC<{ task: Task | null; opened: boolean; onClose: () => any }> 
 								Started at: <span>{dayjs(task.startedAt).format("D MMMM, YYYY, HH:mm")}</span>
 							</p>
 						</div>
-						<div className="time">
-							<p className="title">
-								In work since:{" "}
-								<span>
-									<Timer startedAt={task.startedAt} />
-								</span>
-							</p>
-						</div>
+						{!task.endedAt && (
+							<div className="time">
+								<p className="title">
+									In work since:{" "}
+									<span>
+										<Timer startedAt={task.startedAt} />
+									</span>
+								</p>
+							</div>
+						)}
 					</>
+				)}
+				{task.endedAt && (
+					<div className="time">
+						<p className="title">
+							Endend at: <span>{dayjs(task.endedAt).format("D MMMM, YYYY, HH:mm")}</span>
+						</p>
+					</div>
 				)}
 				<div className="priority">
 					<p className="title">Priority:</p>
-					<select onChange={(e) => setPriority(e.target.value as Priority)}>
-						{possiblePriorities.map((priorityName) => (
-							<option selected={priorityName === priority} key={priorityName} value="priorityName">
+					<select
+						onChange={(e) =>
+							dispatch(
+								updateTaskPriority({
+									projectId,
+									board: task.board,
+									taskId: task.id,
+									priority: e.target.value as Priority,
+								})
+							)
+						}
+					>
+						{priorities.map((priorityName) => (
+							<option selected={priorityName === task.priority} key={priorityName} value={priorityName}>
 								{priorityName}
 							</option>
 						))}
@@ -79,12 +136,7 @@ const TaskModal: FC<{ task: Task | null; opened: boolean; onClose: () => any }> 
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();
-							task.subTasks.unshift({
-								id: Math.ceil(Math.random() * 8428423424),
-								title: subtaskInput,
-								done: false,
-								createdAt: new Date(),
-							});
+							dispatch(addTaskSubtask({ projectId, board: task.board, taskId: task.id, title: subtaskInput }));
 							setSubtaskInput("");
 						}}
 					>
@@ -97,11 +149,32 @@ const TaskModal: FC<{ task: Task | null; opened: boolean; onClose: () => any }> 
 					</form>
 					{task.subTasks.map((subTask) => (
 						<div className="sub-task" key={subTask.id}>
-							<input id={`${task.id}-sub-task-${subTask.id}`} type="checkbox" />
+							<input
+								checked={subTask.done}
+								onChange={() => {
+									dispatch(
+										toggleTaskSubtask({
+											projectId,
+											board: task.board,
+											taskId: task.id,
+											subtaskId: subTask.id,
+										})
+									);
+								}}
+								id={`${task.id}-sub-task-${subTask.id}`}
+								type="checkbox"
+							/>
 							<label htmlFor={`${task.id}-sub-task-${subTask.id}`}>{subTask.title}</label>
 							<button
 								onClick={() => {
-									// handle delete
+									dispatch(
+										deleteTaskSubtask({
+											projectId,
+											board: task.board,
+											taskId: task.id,
+											subtaskId: subTask.id,
+										})
+									);
 								}}
 								className="delete-task"
 							>
@@ -153,23 +226,60 @@ const TaskModal: FC<{ task: Task | null; opened: boolean; onClose: () => any }> 
 				</div>
 				<div className="comments">
 					<div className="title">Comments</div>
-					<div className="comments-container">
-						{task.comments.map((x) => (
-							<CommentItem comment={x} key={x.createdAt.toString()} />
-						))}
+					<Button onClick={() => setIsOpenCommentInput((current) => !current)} small as="button">
+						{!isOpenCommentInput ? "Add comment" : "Close"}
+					</Button>
+					<div style={{ display: !isOpenCommentInput ? "none" : "block" }}>
+						<form
+							onSubmit={(e) => {
+								e.preventDefault();
+
+								dispatch(
+									addTaskComment({ projectId, board: task.board, taskId: task.id, comment: commentInput })
+								);
+								setCommentInput("");
+							}}
+						>
+							<Input
+								fullWidth
+								placeholder="Your comment.."
+								value={commentInput}
+								onChange={(e) => setCommentInput(e.target.value)}
+							/>
+						</form>
 					</div>
+					{task.comments.length > 0 && (
+						<div className="comments-container">
+							{task.comments.map((x) => (
+								<CommentItem key={x.id} projectId={projectId} task={task} comment={x} />
+							))}
+						</div>
+					)}
 				</div>
+				<Button
+					color="red"
+					as="button"
+					small
+					onClick={() => {
+						onClose();
+						dispatch(deleteTask({ projectId, taskId: task.id, board: task.board }));
+					}}
+				>
+					Delete task
+				</Button>
 			</div>
 		</Modal>
 	);
 };
 
-const CommentItem: FC<{ comment: Comment }> = ({ comment }) => {
+const CommentItem: FC<{ comment: Comment; projectId: number; task: Task }> = ({ comment, projectId, task }) => {
 	const [isOpenInput, setIsOpenInput] = useState(false);
 	const [replyInput, setReplyInput] = useState("");
 
+	const dispatch = useAppDispatch();
+
 	return (
-		<div key={comment.createdAt.toString()} className="comment">
+		<div className="comment">
 			<div className="wrapper">
 				<div className="message-header">
 					<div className="author">{comment.author}</div>
@@ -180,20 +290,37 @@ const CommentItem: FC<{ comment: Comment }> = ({ comment }) => {
 					{isOpenInput ? "Close" : "Reply"}
 				</button>
 				<div style={{ display: isOpenInput ? "block" : "none" }}>
-					<Input
-						small
-						fullWidth
-						value={replyInput}
-						onChange={(e) => setReplyInput(e.target.value)}
-						placeholder="Your comment.."
-					/>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+
+							dispatch(
+								addTaskSubcomment({
+									projectId,
+									board: task.board,
+									taskId: task.id,
+									commentId: comment.id,
+									comment: replyInput,
+								})
+							);
+							setReplyInput("");
+						}}
+					>
+						<Input
+							small
+							fullWidth
+							value={replyInput}
+							onChange={(e) => setReplyInput(e.target.value)}
+							placeholder="Your reply.."
+						/>
+					</form>
 				</div>
 			</div>
 			{comment.subcomments && (
 				<div className="subcomments-container">
 					<div className="line"></div>
 					{comment.subcomments.map((subComment) => (
-						<CommentItem comment={subComment} key={subComment.createdAt.toString()} />
+						<CommentItem key={subComment.id} projectId={projectId} task={task} comment={subComment} />
 					))}
 				</div>
 			)}

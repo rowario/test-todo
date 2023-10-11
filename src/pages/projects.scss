@@ -6,6 +6,10 @@
 	& > .project-item {
 		text-decoration: none;
 		color: #000;
+
+		&.add {
+			text-align: center;
+		}
 	}
 
 	& > .project-item:hover .paper {
