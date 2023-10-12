@@ -220,7 +220,7 @@ const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onC
 							const ext = fileName.split(".").at(-1);
 							return (
 								<div className="file" key={link}>
-									<a download href={link} className="name">
+									<a download target="_blank" href={link} className="name">
 										{`${shortName}[.${ext}]`}
 									</a>
 									<div

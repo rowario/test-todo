@@ -8,7 +8,7 @@ function* uploadFile({ payload }: UploadTaskFileRequestAction) {
 		const formData = new FormData();
 		formData.append("file", payload.file);
 
-		const response: AxiosResponse<{ fileUrl: string }> = yield call(axios.post, "http://localhost:3001/upload", formData, {
+		const response: AxiosResponse<{ fileUrl: string }> = yield call(axios.post, "https://api.rowario.ru/upload", formData, {
 			headers: {
 				"Content-Type": "multipart/form-data",
 			},
