@@ -14,15 +14,12 @@ function* uploadFile({ payload }: UploadTaskFileRequestAction) {
 			},
 		});
 
-		console.log("status", response.status);
-
 		if (response.status === 200) {
 			yield put(uploadFileSuccess({ projectId, board, taskId, fileUrl: response.data.fileUrl }));
 		} else {
 			yield put(uploadFileFailure({ projectId, board, taskId, error: "File upload failed" }));
 		}
 	} catch (error) {
-		console.log(error);
 		yield put(uploadFileFailure({ projectId, board, taskId, error: "File upload failed" }));
 	}
 }

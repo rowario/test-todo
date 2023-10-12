@@ -44,7 +44,7 @@ export const Project: FC = () => {
 
 	useEffect(() => {
 		if (!project) navigate("/");
-	}, [project]);
+	}, [project, navigate]);
 
 	if (!project) return null;
 

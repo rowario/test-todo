@@ -5,14 +5,14 @@ dayjs.extend(duration);
 
 const format = "HH:mm:ss";
 
+const getDifference = (from: Date) => dayjs.duration(dayjs().diff(from)).format(format);
+
 const Timer: FC<{ startedAt: Date }> = ({ startedAt }) => {
-	const [time, setTime] = useState(dayjs.duration(dayjs().diff(startedAt)).format(format));
+	const [time, setTime] = useState(getDifference(startedAt));
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			const timePassed = dayjs.duration(dayjs().diff(startedAt));
-
-			setTime(timePassed.format(format));
+			setTime(getDifference(startedAt));
 		}, 1000);
 
 		return () => clearInterval(interval);

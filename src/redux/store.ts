@@ -367,7 +367,6 @@ export const store = createStore(appReducer, applyMiddleware(sagaMiddleware));
 sagaMiddleware.run(rootSaga);
 
 store.subscribe(() => {
-	console.log(store.getState().projects);
 	localStorage.setItem(storageKey, JSON.stringify(store.getState()));
 });
 
