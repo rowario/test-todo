@@ -22,3 +22,15 @@
 		}
 	}
 }
+
+@media (max-width: 768px) {
+	.projects-list {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 576px) {
+	.projects-list {
+		grid-template-columns: 1fr;
+	}
+}

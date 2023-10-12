@@ -50,6 +50,10 @@ type DeleteTaskSubtaskAction = {
 	type: "DELETE_TASK_SUBTASK";
 	payload: { projectId: number; board: TaskBoard; taskId: number; subtaskId: number };
 };
+type DeleteTaskFile = {
+	type: "DELETE_TASK_FILE";
+	payload: { projectId: number; board: TaskBoard; taskId: number; fileIndex: number };
+};
 export type TaskAction =
 	| AddTaskAction
 	| MoveTaskAction
@@ -61,7 +65,8 @@ export type TaskAction =
 	| AddTaskSubcommentAction
 	| AddTaskSubtaskAction
 	| ToggleTaskSubtaskAction
-	| DeleteTaskSubtaskAction;
+	| DeleteTaskSubtaskAction
+	| DeleteTaskFile;
 
 const addTask = (payload: { projectId: number; board: TaskBoard; title: string }): AddTaskAction => ({
 	type: "ADD_TASK",
@@ -141,6 +146,58 @@ const deleteTaskSubtask = (payload: {
 	subtaskId: number;
 }): DeleteTaskSubtaskAction => ({ type: "DELETE_TASK_SUBTASK", payload });
 
+const deleteTaskFile = (payload: {
+	projectId: number;
+	board: TaskBoard;
+	taskId: number;
+	fileIndex: number;
+}): DeleteTaskFile => ({ type: "DELETE_TASK_FILE", payload });
+
+// upload actions
+export type UploadTaskFileRequestAction = {
+	type: "UPLOAD_TASK_FILE_REQUEST";
+	payload: { projectId: number; board: TaskBoard; taskId: number; file: File };
+};
+type UploadTaskFileSuccessAction = {
+	type: "UPLOAD_TASK_FILE_SUCCESS";
+	payload: { projectId: number; board: TaskBoard; taskId: number; fileUrl: string };
+};
+type UploadTaskFileFailureAction = {
+	type: "UPLOAD_TASK_FILE_FAILURE";
+	payload: { projectId: number; board: TaskBoard; taskId: number; error: string };
+};
+type UploadAction = UploadTaskFileRequestAction | UploadTaskFileSuccessAction | UploadTaskFileFailureAction;
+
+const uploadFileRequest = (payload: {
+	projectId: number;
+	board: TaskBoard;
+	taskId: number;
+	file: File;
+}): UploadTaskFileRequestAction => ({
+	type: "UPLOAD_TASK_FILE_REQUEST",
+	payload,
+});
+
+const uploadFileSuccess = (payload: {
+	projectId: number;
+	board: TaskBoard;
+	taskId: number;
+	fileUrl: string;
+}): UploadTaskFileSuccessAction => ({
+	type: "UPLOAD_TASK_FILE_SUCCESS",
+	payload,
+});
+
+const uploadFileFailure = (payload: {
+	projectId: number;
+	board: TaskBoard;
+	taskId: number;
+	error: string;
+}): UploadTaskFileFailureAction => ({
+	type: "UPLOAD_TASK_FILE_FAILURE" as const,
+	payload,
+});
+
 export {
 	addProject,
 	deleteProject,
@@ -155,5 +212,9 @@ export {
 	addTaskSubtask,
 	toggleTaskSubtask,
 	deleteTaskSubtask,
+	deleteTaskFile,
+	uploadFileRequest,
+	uploadFileSuccess,
+	uploadFileFailure,
 };
-export type Action = ProjectAction | TaskAction;
+export type Action = ProjectAction | TaskAction | UploadAction;

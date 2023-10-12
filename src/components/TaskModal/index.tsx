@@ -1,20 +1,23 @@
 import { Editor } from "@tinymce/tinymce-react";
 import dayjs from "dayjs";
 import { FC, useEffect, useState } from "react";
+import { connect } from "react-redux";
 import useDebounce from "../../hooks/useDebounce";
 import {
 	addTaskComment,
 	addTaskSubcomment,
 	addTaskSubtask,
 	deleteTask,
+	deleteTaskFile,
 	deleteTaskSubtask,
 	toggleTaskSubtask,
 	updateTaskDescription,
 	updateTaskPriority,
 	updateTaskTitle,
+	uploadFileRequest,
 } from "../../redux/actions";
 import { useAppDispatch } from "../../redux/hooks";
-import { Comment, Task } from "../../types";
+import { Comment, Task, TaskBoard } from "../../types";
 import Button from "../Button";
 import Input from "../Input";
 import Loader from "../Loader";
@@ -47,11 +50,6 @@ const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onC
 	const dispatch = useAppDispatch();
 
 	useEffect(() => {
-		setTitle(task?.title ?? "");
-		setDescription(task?.description ?? "");
-	}, [task, task?.description]);
-
-	useEffect(() => {
 		if (task && task.title !== debouncedTitle) {
 			dispatch(updateTaskTitle({ projectId, board: task.board, taskId: task.id, title: debouncedTitle }));
 		}
@@ -62,6 +60,12 @@ const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onC
 			dispatch(updateTaskDescription({ projectId, board: task.board, taskId: task.id, description: debouncedDescription }));
 		}
 	}, [debouncedDescription]);
+
+	useEffect(() => {
+		setIsOpenCommentInput(false);
+		setTitle(task?.title ?? "");
+		setDescription(task?.description ?? "");
+	}, [task]);
 
 	if (!task) return null;
 
@@ -113,6 +117,7 @@ const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onC
 				<div className="priority">
 					<p className="title">Priority:</p>
 					<select
+						value={task.priority}
 						onChange={(e) =>
 							dispatch(
 								updateTaskPriority({
@@ -125,7 +130,7 @@ const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onC
 						}
 					>
 						{priorities.map((priorityName) => (
-							<option selected={priorityName === task.priority} key={priorityName} value={priorityName}>
+							<option key={priorityName} value={priorityName}>
 								{priorityName}
 							</option>
 						))}
@@ -208,20 +213,27 @@ const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onC
 				<div className="files">
 					<div className="title">Files</div>
 					<div className="files-container">
-						<div className="file add-file">
-							<label className="name">
-								<input type="file" name="uploadFile" />
-								add new file
-							</label>
-						</div>
-						{task.attachedFiles.map((x, i) => (
-							<div className="file" key={i}>
-								<a download href={x} className="name">
-									{x}
-								</a>
-								<div className="delete-file">✕</div>
-							</div>
-						))}
+						<UploadButton projectId={projectId} board={task.board} taskId={task.id} />
+						{task.attachedFiles.map((link, fileIndex) => {
+							const fileName = link.split("/").at(-1)!;
+							const shortName = fileName.length > 10 ? fileName.slice(0, 10).trim() + ".." : fileName;
+							const ext = fileName.split(".").at(-1);
+							return (
+								<div className="file" key={link}>
+									<a download href={link} className="name">
+										{`${shortName}[.${ext}]`}
+									</a>
+									<div
+										onClick={() =>
+											dispatch(deleteTaskFile({ projectId, board: task.board, taskId: task.id, fileIndex }))
+										}
+										className="delete-file"
+									>
+										✕
+									</div>
+								</div>
+							);
+						})}
 					</div>
 				</div>
 				<div className="comments">
@@ -327,5 +339,28 @@ const CommentItem: FC<{ comment: Comment; projectId: number; task: Task }> = ({ 
 		</div>
 	);
 };
+
+const UButton: FC<{ projectId: number; board: TaskBoard; taskId: number }> = ({ projectId, board, taskId }) => {
+	const dispatch = useAppDispatch();
+
+	return (
+		<div className="file add-file">
+			<label className="name">
+				<input
+					type="file"
+					name="uploadFile"
+					onChange={(e) => {
+						if (!e.target.files) return;
+						const file = e.target.files[0];
+						dispatch(uploadFileRequest({ projectId, board, taskId, file }));
+					}}
+				/>
+				add new file
+			</label>
+		</div>
+	);
+};
+
+const UploadButton = connect(null, { uploadFileRequest })(UButton);
 
 export default TaskModal;

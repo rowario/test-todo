@@ -1,6 +1,8 @@
-import { createStore, Reducer } from "redux";
+import createSagaMiddleware from "@redux-saga/core";
+import { applyMiddleware, createStore, Reducer } from "redux";
 import { Comment, Project, Task } from "../types";
 import { Action } from "./actions";
+import rootSaga from "./rootSaga";
 
 export type State = {
 	lastProjectId: number;
@@ -299,6 +301,44 @@ const appReducer: Reducer<State, Action> = (state = initialState, { type, payloa
 					return project;
 				}),
 			};
+		case "UPLOAD_TASK_FILE_SUCCESS":
+			return {
+				...state,
+				projects: state.projects.map((project) => {
+					if (project.id === payload.projectId) {
+						return {
+							...project,
+							tasks: {
+								...project.tasks,
+								[payload.board]: project.tasks[payload.board].map((task) => {
+									task.attachedFiles.push(payload.fileUrl);
+									return task;
+								}),
+							},
+						};
+					}
+					return project;
+				}),
+			};
+		case "DELETE_TASK_FILE":
+			return {
+				...state,
+				projects: state.projects.map((project) => {
+					if (project.id === payload.projectId) {
+						return {
+							...project,
+							tasks: {
+								...project.tasks,
+								[payload.board]: project.tasks[payload.board].map((task) => {
+									task.attachedFiles.splice(payload.fileIndex, 1);
+									return task;
+								}),
+							},
+						};
+					}
+					return project;
+				}),
+			};
 		case "DELETE_TASK":
 			return {
 				...state,
@@ -320,7 +360,11 @@ const appReducer: Reducer<State, Action> = (state = initialState, { type, payloa
 	}
 };
 
-export const store = createStore(appReducer);
+const sagaMiddleware = createSagaMiddleware();
+
+export const store = createStore(appReducer, applyMiddleware(sagaMiddleware));
+
+sagaMiddleware.run(rootSaga);
 
 store.subscribe(() => {
 	console.log(store.getState().projects);
