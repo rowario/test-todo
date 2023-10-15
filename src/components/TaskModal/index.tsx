@@ -1,7 +1,6 @@
 import { Editor } from "@tinymce/tinymce-react";
 import dayjs from "dayjs";
 import { FC, useEffect, useState } from "react";
-import { connect } from "react-redux";
 import useDebounce from "../../hooks/useDebounce";
 import {
 	addTaskComment,
@@ -14,15 +13,15 @@ import {
 	updateTaskDescription,
 	updateTaskPriority,
 	updateTaskTitle,
-	uploadFileRequest,
 } from "../../redux/actions";
 import { useAppDispatch } from "../../redux/hooks";
-import { Comment, Task, TaskBoard } from "../../types";
+import { Comment, Task } from "../../types";
 import Button from "../Button";
 import Input from "../Input";
 import Loader from "../Loader";
 import { Modal } from "../Modal";
 import Timer from "../Timer";
+import { UploadButtonConnected } from "../UploadButton";
 import "./task-modal.scss";
 
 type Priority = Task["priority"];
@@ -213,7 +212,7 @@ const TaskModal: FC<{ projectId: number; task: Task | null; opened: boolean; onC
 				<div className="files">
 					<div className="title">Files</div>
 					<div className="files-container">
-						<UploadButton projectId={projectId} board={task.board} taskId={task.id} />
+						<UploadButtonConnected projectId={projectId} board={task.board} taskId={task.id} />
 						{task.attachedFiles.map((link, fileIndex) => {
 							const fileName = link.split("/").at(-1)!;
 							const shortName = fileName.length > 10 ? fileName.slice(0, 10).trim() + ".." : fileName;
@@ -339,28 +338,5 @@ const CommentItem: FC<{ comment: Comment; projectId: number; task: Task }> = ({ 
 		</div>
 	);
 };
-
-const UButton: FC<{ projectId: number; board: TaskBoard; taskId: number }> = ({ projectId, board, taskId }) => {
-	const dispatch = useAppDispatch();
-
-	return (
-		<div className="file add-file">
-			<label className="name">
-				<input
-					type="file"
-					name="uploadFile"
-					onChange={(e) => {
-						if (!e.target.files) return;
-						const file = e.target.files[0];
-						dispatch(uploadFileRequest({ projectId, board, taskId, file }));
-					}}
-				/>
-				add new file
-			</label>
-		</div>
-	);
-};
-
-const UploadButton = connect(null, { uploadFileRequest })(UButton);
 
 export default TaskModal;

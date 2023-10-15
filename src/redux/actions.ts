@@ -146,12 +146,10 @@ const deleteTaskSubtask = (payload: {
 	subtaskId: number;
 }): DeleteTaskSubtaskAction => ({ type: "DELETE_TASK_SUBTASK", payload });
 
-const deleteTaskFile = (payload: {
-	projectId: number;
-	board: TaskBoard;
-	taskId: number;
-	fileIndex: number;
-}): DeleteTaskFile => ({ type: "DELETE_TASK_FILE", payload });
+const deleteTaskFile = (payload: { projectId: number; board: TaskBoard; taskId: number; fileIndex: number }): DeleteTaskFile => ({
+	type: "DELETE_TASK_FILE",
+	payload,
+});
 
 // upload actions
 export type UploadTaskFileRequestAction = {

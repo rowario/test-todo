@@ -1,5 +1,5 @@
 import { FC, ReactNode } from "react";
-import "./module.scss";
+import "./header.scss";
 
 import Container from "../Container";
 

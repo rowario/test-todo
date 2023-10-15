@@ -1,5 +1,5 @@
 import { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
-import "./module.scss";
+import "./button.scss";
 
 type ButtonProps<C extends ElementType> = {
 	as?: C;
